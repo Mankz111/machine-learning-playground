@@ -26,11 +26,8 @@ def carregar_dados_portugal():
         for col in cols:
             if col in df.columns and col not in ['District', 'Type']:
                 df[col] = pd.to_numeric(df[col], errors='coerce')
-        
         if 'Type' in df.columns:
             df = df[df['Type'] == 'Apartment']
-            
-        
         if 'NumberOfBathrooms' in df.columns:
             df['NumberOfBathrooms'] = df['NumberOfBathrooms'].fillna(1)     
         cols_check = [c for c in ['TotalArea', 'Price', 'District'] if c in df.columns]
@@ -40,7 +37,6 @@ def carregar_dados_portugal():
     except FileNotFoundError:
         return None
 
-
 df_pt = carregar_dados_portugal()
 st.sidebar.title("Navegação")
 menu = st.sidebar.radio(
@@ -49,7 +45,8 @@ menu = st.sidebar.radio(
         "1. Regressão (Imobiliário PT)", 
         "2. Árvores (Iris Dataset)", 
         "3. K-Means (Documentos)", 
-        "4. Comparação Final (O Vencedor)"
+        "4. Comparação Final (O Vencedor)",
+        "5. Conclusões e Análise Crítica",
     ]
 )
 st.sidebar.info("Trabalho de Machine Learning.")
@@ -120,28 +117,21 @@ elif menu == "3. K-Means (Documentos)":
     # 1. Carregar o Dataset (Usamos cache para não baixar sempre que mexe no slider)
     @st.cache_resource
     def carregar_dados():
-        # Vamos carregar apenas 4 categorias para ser mais rápido e visual
+        
         categorias = ['sci.med', 'sci.space', 'comp.graphics', 'rec.sport.baseball']
         dataset = fetch_20newsgroups(subset='train', categories=categorias, 
                                      remove=('headers', 'footers', 'quotes'))
         return dataset
 
     dataset = carregar_dados()
-    
-    # 2. Transformar Texto em Números (TF-IDF)
-    # max_features=1000 limita o vocabulário às 1000 palavras mais importantes (para ser leve)
     vectorizer = TfidfVectorizer(stop_words='english', max_features=1000)
     X_texto = vectorizer.fit_transform(dataset.data)
-
-    # Configuração do K-Means
     c1, c2 = st.columns([1, 2])
     k = c1.slider("Número de Grupos (K)", 2, 6, 4)
-    
-    # 3. Aplicar K-Means
     kmeans = KMeans(n_clusters=k, random_state=42, n_init=10)
     clusters = kmeans.fit_predict(X_texto)
 
-    # 4. Mostrar as palavras principais e ADIVINHAR o tema
+
     c1.subheader("Análise dos Grupos")
     termos = vectorizer.get_feature_names_out()
     centroides = kmeans.cluster_centers_
@@ -159,7 +149,6 @@ elif menu == "3. K-Means (Documentos)":
             return "🏥 Medicina"
         else:
             return "❓ Misto / Indefinido"
-
     for i in range(k):
         indices_top = centroides[i].argsort()[-10:][::-1]
         palavras = [termos[ind] for ind in indices_top]
@@ -187,59 +176,185 @@ elif menu == "3. K-Means (Documentos)":
     c2.pyplot(fig)
 
 # ==============================================================================
-# 4. BATALHA FINAL (O VENCEDOR)
+# 4. BATALHA FINAL
 # ==============================================================================
 elif menu == "4. Comparação Final (O Vencedor)":
-    st.title("⚔️ A Batalha dos Algoritmos")
-    st.markdown("Quem tem a melhor performance em dados difíceis (curvas)?")
+    st.title("Comparação do Algoritmos")
+    st.markdown("### Quem vence em dados complexos (Curvas)?")
 
     # 1. GERAR DADOS
     np.random.seed(42)
     X = np.sort(5 * np.random.rand(100, 1), axis=0)
     y = np.sin(X).ravel()
-    y[::5] += 3 * (0.5 - np.random.rand(20))
+    y[::5] += 3 * (0.5 - np.random.rand(20)) # Adiciona ruído
     
-    # 2. CONFIGURAÇÃO
-    c_conf, c_viz = st.columns([1, 3])
+    # 2. CONTROLOS
+    c_conf, c_text = st.columns([1, 2])
     with c_conf:
-        st.subheader("Controlos")
-        depth = st.slider("Profundidade Árvore", 1, 15, 5)
-        k_clusters = st.slider("K-Means (Grupos)", 2, 10, 4)
+        st.caption("Parâmetros dos Modelos")
+        depth = st.slider("Profundidade da Árvore", 1, 15, 5)
+        k_clusters = st.slider("K-Means (K)", 2, 20, 8)
 
-    # 3. TREINAR
+
+    # A. Regressão Linear
     lin_reg = LinearRegression().fit(X, y)
+    y_pred_lin = lin_reg.predict(X)
+
+    # B. Árvore de Decisão
     tree_reg = DecisionTreeRegressor(max_depth=depth).fit(X, y)
+    y_pred_tree = tree_reg.predict(X)
     dados_combinados = np.column_stack((X, y))
-    kmeans = KMeans(n_clusters=k_clusters, random_state=42).fit(dados_combinados)
+    kmeans = KMeans(n_clusters=k_clusters, random_state=42, n_init=10).fit(dados_combinados)
+    y_pred_kmeans = np.zeros_like(y)
+    for i in range(k_clusters):
+        mask = (kmeans.labels_ == i)
+        if np.any(mask):
+            y_pred_kmeans[mask] = kmeans.cluster_centers_[i, 1]
 
-    # 4. MÉTRICAS DE ERRO
-    mse_lin = mean_squared_error(y, lin_reg.predict(X))
-    mse_tree = mean_squared_error(y, tree_reg.predict(X))
 
-    # 5. GRÁFICO
-    with c_viz:
-        fig, ax = plt.subplots(figsize=(10, 5))
-        ax.scatter(X, y, c=kmeans.labels_, cmap='viridis', s=50, alpha=0.4, label='Dados')
-        ax.plot(X, lin_reg.predict(X), color='blue', linewidth=2, linestyle='--', label='Regressão (Reta)')
-        X_grid = np.arange(0, 5, 0.01)[:, np.newaxis]
-        ax.plot(X_grid, tree_reg.predict(X_grid), color='green', linewidth=3, label='Árvore (Curva)')
-        ax.legend()
+    mse_lin = mean_squared_error(y, y_pred_lin)
+    mse_tree = mean_squared_error(y, y_pred_tree)
+    mse_kmeans = mean_squared_error(y, y_pred_kmeans)
+
+    st.subheader("1. Visualização do Comportamento")
+    fig, ax = plt.subplots(figsize=(10, 4))
+    
+    
+    ax.scatter(X, y, c='gray', s=30, alpha=0.5, label='Dados Reais')
+    
+    
+    ax.plot(X, y_pred_lin, color='blue', linewidth=2, linestyle='--', label='Regressão Linear (Reta)')
+    
+    
+    X_grid = np.arange(0, 5, 0.01)[:, np.newaxis]
+    y_grid_tree = tree_reg.predict(X_grid)
+    ax.plot(X_grid, y_grid_tree, color='green', linewidth=2, label='Árvore de Decisão (Degraus)')
+    
+    
+    ax.scatter(X, y_pred_kmeans, color='red', marker='x', s=50, label='K-Means (Centróides)')
+
+    ax.set_title("Como cada algoritmo tenta 'desenhar' a curva")
+    ax.legend()
+    st.pyplot(fig)
+
+    
+    st.subheader("2. Ranking de Erro (Quem falhou menos?)")
+    
+    col_graf, col_exp = st.columns([2, 1])
+    
+    with col_graf:
+        fig2, ax2 = plt.subplots(figsize=(6, 4))
+        algoritmos = ['Regressão Linear', 'Árvore de Decisão', 'K-Means']
+        erros = [mse_lin, mse_tree, mse_kmeans]
+        cores = ['blue', 'green', 'red']
+        
+        barras = ax2.bar(algoritmos, erros, color=cores, alpha=0.7)
+        ax2.set_ylabel("Erro Médio Quadrático (MSE)")
+        ax2.set_title("Comparação de Erro (Menor é Melhor)")
+        
+        # Adicionar o valor em cima da barra
+        for barra in barras:
+            height = barra.get_height()
+            ax2.text(barra.get_x() + barra.get_width()/2., height,
+                    f'{height:.2f}', ha='center', va='bottom')
+            
+        st.pyplot(fig2)
+
+    with col_exp:
+        st.info("💡 **Interpretação**")
+        if mse_tree < mse_lin:
+            st.write("**A Árvore venceu!**")
+            st.caption("Como os dados são curvos, a árvore consegue adaptar-se melhor que a reta rígida da regressão.")
+        else:
+            st.write("**A Regressão venceu!**")
+        
+        st.write("---")
+        st.write(f"**Sobre o K-Means:**")
+        st.caption(f"Com {k_clusters} grupos, o erro é {mse_kmeans:.2f}. Se aumentares o K, o erro diminui porque ele cobre melhor os pontos.")
+
+    
+    st.divider()
+    st.subheader("📚 Entender as Diferenças")
+    
+    c1, c2, c3 = st.columns(3)
+    
+    with c1:
+        st.markdown("### 📉 Regressão Linear")
+        st.write("**O que é:** Tenta passar uma linha reta perfeita.")
+        st.write("**Vantagem:** Simples e rápido.")
+        st.write("**Problema:** É 'burro' para curvas. Se os dados fazem um 'S', a linha falha muito.")
+        
+    with c2:
+        st.markdown("### 🌲 Árvore de Decisão")
+        st.write("**O que é:** Cria regras (se X > 2, então Y = 10). Parece uma escada.")
+        st.write("**Vantagem:** Adapta-se a qualquer desenho ou curva.")
+        st.write("**Problema:** Pode decorar o ruído (Overfitting) se a profundidade for muito alta.")
+
+    with c3:
+        st.markdown("### 🎯 K-Means")
+        st.write("**O que é:** Não prevê valores, agrupa vizinhos.")
+        st.write("**Neste teste:** Usámo-lo para simplificar os dados. Ele substitui muitos pontos por um só 'representante' (o X vermelho).")
+        st.write("**Uso Real:** Compressão de imagem e segmentação.")
+
+elif menu == "5. Conclusões e Análise Crítica":
+    st.title("📑 Conclusões e Análise Crítica")
+    
+    st.markdown("""
+    ### Síntese do Projeto
+    Este estudo prático visou demonstrar e comparar o comportamento de algoritmos de **Aprendizagem Supervisionada** e **Não Supervisionada**.
+    Abaixo apresentam-se as principais inferências retiradas de cada módulo experimental.
+    """)
+    
+    st.divider()
+
+    c1, c2 = st.columns(2)
+    
+    with c1:
+        st.subheader("1. Análise de Regressão")
+        st.info("**Linearidade vs. Realidade**")
+        st.write("""
+        * **Observação:** A Regressão Linear demonstrou eficácia na identificação de tendências macro (ex: Área vs Preço).
+        * **Limitação:** O modelo apresenta *underfitting* severo quando confrontado com distribuições de dados não-lineares ou complexas, falhando na captura de nuances locais.
+        """)
+
+    with c2:
+        st.subheader("2. Clustering (K-Means)")
+        st.success("**Padrões Latentes em Texto**")
+        st.write("""
+        * **Eficácia:** O algoritmo conseguiu segregar documentos temáticos (Notícias) sem rotulagem prévia, validando o uso de distâncias vetoriais (TF-IDF) para processamento de linguagem natural.
+        * **Sensibilidade:** A performance depende intrinsecamente da escolha correta do hiperparâmetro *K* (número de clusters).
+        """)
+        
+    st.markdown("---")
+    
+    st.subheader("3. Comparação de Performance (Dados Não-Lineares)")
+    
+    col_text, col_viz = st.columns([3, 1])
+    
+    with col_text:
+        st.write("""
+        Na simulação com dados sinusoidais (curvas), a comparação direta entre **Regressão Linear** e **Árvores de Decisão** permitiu concluir:
+        
+        1.  **Capacidade de Adaptação:** A Árvore de Decisão superou a Regressão ao conseguir segmentar o espaço de decisão, ajustando-se à curvatura dos dados.
+        2.  **Risco de Overfitting:** Embora a Árvore tenha menor erro no treino, observou-se que profundidades elevadas levam o modelo a "memorizar" o ruído dos dados, perdendo capacidade de generalização.
+        """)
+    
+    with col_viz:
+        # Pequena visualização abstrata da conclusão
+        x = np.linspace(0, 10, 100)
+        fig, ax = plt.subplots(figsize=(4, 3))
+        ax.plot(x, np.sin(x), 'g-', label='Modelo Flexível (Árvore)')
+        ax.plot(x, x*0, 'b--', label='Modelo Rígido (Linear)')
+        ax.set_title("Flexibilidade do Modelo")
+        ax.set_yticks([])
+        ax.legend(fontsize=8)
         st.pyplot(fig)
 
-    # 6. DECLARAÇÃO DO VENCEDOR
-    st.divider()
-    st.header("🏆 O Veredicto Oficial")
-
-    col_v1, col_v2 = st.columns([1, 3])
+    st.markdown("""
+    ### Veredicto Final
+    Conclui-se que não existe um algoritmo universalmente superior. A escolha depende da natureza dos dados:
+    * **Regressão Linear:** Ideal para inferências simples e interpretáveis.
+    * **Árvores de Decisão:** Superiores em dados complexos e não-lineares.
+    * **K-Means:** Essencial para exploração inicial de dados não rotulados.
+    """)
     
-    with col_v1:
-        st.metric("Erro Regressão", f"{mse_lin:.3f}")
-        st.metric("Erro Árvore", f"{mse_tree:.3f}")
-
-    with col_v2:
-        if mse_tree < mse_lin:
-            st.success(f"### VENCEDOR: Árvore de Decisão! 🌲")
-            st.write(f"A Árvore adaptou-se melhor à curva dos dados.")
-        else:
-            st.info("### VENCEDOR: Regressão Linear! 📉")
-            st.write("A linha reta foi suficiente.")
