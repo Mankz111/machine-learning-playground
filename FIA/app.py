@@ -55,7 +55,7 @@ st.sidebar.info("Trabalho de Machine Learning.")
 # 1. REGRESSÃO LINEAR
 # ==============================================================================
 if menu == "1. Regressão (Imobiliário PT)":
-    st.title("🏠 Previsão Imobiliária (Portugal)")
+    st.title("Previsão Imobiliária (Portugal)")
     
     if df_pt is not None and not df_pt.empty:
         distritos = df_pt['District'].value_counts()
@@ -88,7 +88,7 @@ if menu == "1. Regressão (Imobiliário PT)":
 # 2. ÁRVORES (IRIS)
 # ==============================================================================
 elif menu == "2. Árvores (Iris Dataset)":
-    st.title("🌸 Classificação de Flores (Iris)")
+    st.title("Classificação de Flores (Iris)")
     iris = load_iris()
     X, y = iris.data, iris.target
     modelo = DecisionTreeClassifier(max_depth=3).fit(X, y)
@@ -111,7 +111,7 @@ elif menu == "2. Árvores (Iris Dataset)":
 # 3. K-MEANS 
 # ==============================================================================
 elif menu == "3. K-Means (Documentos)":
-    st.title("📚 Agrupamento de Notícias (Clustering)")
+    st.title("Agrupamento de Notícias (Clustering)")
     st.write("Usando o dataset '20 Newsgroups' para agrupar textos por tema automaticamente.")
 
     # 1. Carregar o Dataset (Usamos cache para não baixar sempre que mexe no slider)
@@ -176,19 +176,19 @@ elif menu == "3. K-Means (Documentos)":
     c2.pyplot(fig)
 
 # ==============================================================================
-# 4. BATALHA FINAL
+# 4. COMPARAÇÃO
 # ==============================================================================
 elif menu == "4. Comparação Final (O Vencedor)":
     st.title("Comparação do Algoritmos")
     st.markdown("### Quem vence em dados complexos (Curvas)?")
 
-    # 1. GERAR DADOS
+    
     np.random.seed(42)
     X = np.sort(5 * np.random.rand(100, 1), axis=0)
     y = np.sin(X).ravel()
     y[::5] += 3 * (0.5 - np.random.rand(20)) # Adiciona ruído
     
-    # 2. CONTROLOS
+    
     c_conf, c_text = st.columns([1, 2])
     with c_conf:
         st.caption("Parâmetros dos Modelos")
@@ -261,7 +261,7 @@ elif menu == "4. Comparação Final (O Vencedor)":
         st.pyplot(fig2)
 
     with col_exp:
-        st.info("💡 **Interpretação**")
+        st.info("**Interpretação**")
         if mse_tree < mse_lin:
             st.write("**A Árvore venceu!**")
             st.caption("Como os dados são curvos, a árvore consegue adaptar-se melhor que a reta rígida da regressão.")
@@ -274,87 +274,55 @@ elif menu == "4. Comparação Final (O Vencedor)":
 
     
     st.divider()
-    st.subheader("📚 Entender as Diferenças")
+    st.subheader("Entender as Diferenças")
     
     c1, c2, c3 = st.columns(3)
     
     with c1:
-        st.markdown("### 📉 Regressão Linear")
-        st.write("**O que é:** Tenta passar uma linha reta perfeita.")
-        st.write("**Vantagem:** Simples e rápido.")
-        st.write("**Problema:** É 'burro' para curvas. Se os dados fazem um 'S', a linha falha muito.")
-        
-    with c2:
-        st.markdown("### 🌲 Árvore de Decisão")
-        st.write("**O que é:** Cria regras (se X > 2, então Y = 10). Parece uma escada.")
-        st.write("**Vantagem:** Adapta-se a qualquer desenho ou curva.")
-        st.write("**Problema:** Pode decorar o ruído (Overfitting) se a profundidade for muito alta.")
-
-    with c3:
-        st.markdown("### 🎯 K-Means")
-        st.write("**O que é:** Não prevê valores, agrupa vizinhos.")
-        st.write("**Neste teste:** Usámo-lo para simplificar os dados. Ele substitui muitos pontos por um só 'representante' (o X vermelho).")
-        st.write("**Uso Real:** Compressão de imagem e segmentação.")
-
-elif menu == "5. Conclusões e Análise Crítica":
-    st.title("📑 Conclusões e Análise Crítica")
-    
-    st.markdown("""
-    ### Síntese do Projeto
-    Este estudo prático visou demonstrar e comparar o comportamento de algoritmos de **Aprendizagem Supervisionada** e **Não Supervisionada**.
-    Abaixo apresentam-se as principais inferências retiradas de cada módulo experimental.
-    """)
-    
-    st.divider()
-
-    c1, c2 = st.columns(2)
-    
-    with c1:
         st.subheader("1. Análise de Regressão")
-        st.info("**Linearidade vs. Realidade**")
+        st.markdown("##### Linearidade vs. Complexidade")
         st.write("""
-        * **Observação:** A Regressão Linear demonstrou eficácia na identificação de tendências macro (ex: Área vs Preço).
-        * **Limitação:** O modelo apresenta *underfitting* severo quando confrontado com distribuições de dados não-lineares ou complexas, falhando na captura de nuances locais.
+        * **Desempenho:** A Regressão Linear demonstrou eficácia na identificação de tendências macroscópicas e correlações diretas.
+        * **Restrição:** O modelo evidenciou *underfitting* ao ser confrontado com distribuições de dados não-lineares, falhando na captura de nuances locais e curvaturas acentuadas.
         """)
 
     with c2:
         st.subheader("2. Clustering (K-Means)")
-        st.success("**Padrões Latentes em Texto**")
+        st.markdown("##### Padrões Latentes em Dados Não Estruturados")
         st.write("""
-        * **Eficácia:** O algoritmo conseguiu segregar documentos temáticos (Notícias) sem rotulagem prévia, validando o uso de distâncias vetoriais (TF-IDF) para processamento de linguagem natural.
-        * **Sensibilidade:** A performance depende intrinsecamente da escolha correta do hiperparâmetro *K* (número de clusters).
+        * **Eficácia:** O algoritmo segregou documentos temáticos com sucesso sem necessidade de rotulagem prévia, validando o uso de métricas de distância vetorial.
+        * **Sensibilidade:** A performance mostrou-se dependente da definição prévia do hiperparâmetro *K* (número de clusters) e da inicialização dos centróides.
         """)
         
     st.markdown("---")
     
-    st.subheader("3. Comparação de Performance (Dados Não-Lineares)")
+    st.subheader("3. Comparação de Performance em Dados Não-Lineares")
     
     col_text, col_viz = st.columns([3, 1])
     
     with col_text:
         st.write("""
-        Na simulação com dados sinusoidais (curvas), a comparação direta entre **Regressão Linear** e **Árvores de Decisão** permitiu concluir:
+        Na simulação com dados sinusoidais, a análise comparativa entre **Regressão Linear** e **Árvores de Decisão** permitiu concluir:
         
-        1.  **Capacidade de Adaptação:** A Árvore de Decisão superou a Regressão ao conseguir segmentar o espaço de decisão, ajustando-se à curvatura dos dados.
-        2.  **Risco de Overfitting:** Embora a Árvore tenha menor erro no treino, observou-se que profundidades elevadas levam o modelo a "memorizar" o ruído dos dados, perdendo capacidade de generalização.
+        1.  **Adaptabilidade do Modelo:** A Árvore de Decisão superou a Regressão Linear ao segmentar o espaço de decisão, ajustando-se à morfologia não-linear dos dados.
+        2.  **Compromisso Viés-Variância:** Embora a Árvore apresente menor erro no conjunto de treino, profundidades excessivas levam à memorização de ruído (*overfitting*), prejudicando a capacidade de generalização do modelo.
         """)
     
     with col_viz:
-        # Pequena visualização abstrata da conclusão
         x = np.linspace(0, 10, 100)
         fig, ax = plt.subplots(figsize=(4, 3))
         ax.plot(x, np.sin(x), 'g-', label='Modelo Flexível (Árvore)')
         ax.plot(x, x*0, 'b--', label='Modelo Rígido (Linear)')
-        ax.set_title("Flexibilidade do Modelo")
+        ax.set_title("Comparativo de Ajuste", fontsize=10)
         ax.set_yticks([])
         ax.legend(fontsize=8)
         st.pyplot(fig)
 
     st.markdown("""
-    ### Veredicto Final
-    Conclui-se que não existe um algoritmo universalmente superior. A escolha depende da natureza dos dados:
-    * **Regressão Linear:** Ideal para inferências simples e interpretáveis.
-    * **Árvores de Decisão:** Superiores em dados complexos e não-lineares.
-    * **K-Means:** Essencial para exploração inicial de dados não rotulados.
+    ### Considerações Finais
+    Conclui-se que a seleção do algoritmo deve ser orientada pela natureza dos dados e pelo objetivo do negócio:
+    * **Regressão Linear:** Recomendada para inferências causais simples e ambientes onde a interpretabilidade é prioritária.
+    * **Árvores de Decisão:** Superiores em cenários com dados complexos e fronteiras de decisão não-lineares.
+    * **K-Means:** Essencial para análise exploratória e descoberta de padrões em conjuntos de dados não rotulados.
     """)
     
