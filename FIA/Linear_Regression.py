@@ -11,7 +11,6 @@ from sklearn.linear_model import LinearRegression
 from sklearn.impute import SimpleImputer
 import numpy as np
 import os
-import streamlit
 import matplotlib
 matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
