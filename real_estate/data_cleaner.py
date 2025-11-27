@@ -3,8 +3,8 @@ import pandas as pd
 import os
 from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import train_test_split
-from sklearn.tree import DecisionTreeRegressor
 from sklearn.metrics import mean_absolute_error
+from sklearn.ensemble import RandomForestRegressor
 
 try:
     csv = os.path.join(os.path.dirname(__file__), 'portugal_real_estate.csv')
@@ -22,6 +22,8 @@ data_to_put_zero = ['Garage', 'HasParking']
 final_data = new_data.copy()
 final_data[data_to_put_zero] = final_data[data_to_put_zero].fillna(0)
 encoder = LabelEncoder()
+final_data['Type'] = encoder.fit_transform(final_data['Type'])
+final_data['EnergyCertificate'] = encoder.fit_transform(final_data['EnergyCertificate'])
 hasParkingCat = final_data['HasParking']
 final_data['HasParking'] = encoder.fit_transform(hasParkingCat)
 hasGarage = final_data['Garage']
@@ -38,14 +40,14 @@ for col in citys:
 
 final_data = final_data[clean_area & clean_price & clean_bath]
 final_data['Elevator'] = final_data['Elevator'].astype(int)
-# 
+
 
 X = final_data.drop('Price', axis= 1)
 y = final_data['Price']
 
 X_train, X_test, y_train, y_test = train_test_split(X,y, random_state=42, test_size=0.2)
 
-model = DecisionTreeRegressor()
+model = RandomForestRegressor(n_estimators=100, random_state=42)
 
 model.fit(X_train, y_train)
 predictor = model.predict(X_test)
@@ -55,10 +57,10 @@ print("O erro médio é:", mae)
 
 
 
-print(final_data.info())
-print(final_data['District'].describe())
-print(final_data['City'].describe())
-print(final_data['Town'].describe())
+# print(final_data.info())
+# print(final_data['District'].describe())
+# print(final_data['City'].describe())
+# print(final_data['Town'].describe())
 # print(final_data['Type'].unique())
 # print(final_data['EnergyCertificate'].unique())
 # print(final_data['NumberOfBathrooms'].describe())
