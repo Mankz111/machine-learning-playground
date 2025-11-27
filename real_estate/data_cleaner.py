@@ -2,7 +2,9 @@ from sklearn.impute import SimpleImputer
 import pandas as pd
 import os
 from sklearn.preprocessing import LabelEncoder
-from sklearn.linear_model import LinearRegression
+from sklearn.model_selection import train_test_split
+from sklearn.tree import DecisionTreeRegressor
+from sklearn.metrics import mean_absolute_error
 
 try:
     csv = os.path.join(os.path.dirname(__file__), 'portugal_real_estate.csv')
@@ -27,16 +29,36 @@ final_data['Garage'] = encoder.fit_transform(hasGarage)
 clean_area = (final_data['TotalArea'] > 20) & (final_data['TotalArea'] < 2000)
 clean_price = (final_data['Price'] > 10000) & (final_data['Price'] < 5000000)
 clean_bath = (final_data['NumberOfBathrooms'] > 0)
+citys = ['District', 'City', 'Town']
+
+for col in citys:
+    final_data[col]=final_data[col].astype(str)
+    encoder = LabelEncoder()
+    final_data[col] = encoder.fit_transform(final_data[col])
+
 final_data = final_data[clean_area & clean_price & clean_bath]
 final_data['Elevator'] = final_data['Elevator'].astype(int)
+# 
 
-model = LinearRegression
+X = final_data.drop('Price', axis= 1)
+y = final_data['Price']
+
+X_train, X_test, y_train, y_test = train_test_split(X,y, random_state=42, test_size=0.2)
+
+model = DecisionTreeRegressor()
+
+model.fit(X_train, y_train)
+predictor = model.predict(X_test)
+
+mae = mean_absolute_error(y_test, predictor)
+print("O erro médio é:", mae)
 
 
 
-
-
-#print(final_data.info())
+print(final_data.info())
+print(final_data['District'].describe())
+print(final_data['City'].describe())
+print(final_data['Town'].describe())
 # print(final_data['Type'].unique())
 # print(final_data['EnergyCertificate'].unique())
 # print(final_data['NumberOfBathrooms'].describe())
