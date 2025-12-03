@@ -5,6 +5,7 @@ from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_absolute_error
 from sklearn.ensemble import RandomForestRegressor
+from sklearn.preprocessing import OneHotEncoder
 
 try:
     csv = os.path.join(os.path.dirname(__file__), 'portugal_real_estate.csv')
@@ -15,7 +16,7 @@ data = pd.read_csv(csv, low_memory=False)
 
 
 missing_percentage = (data.isnull().sum() / len(data)) * 100
-cols_to_drop = ['ConservationStatus', 'BuiltArea', 'GrossArea', 'Floor', 'PublishDate', 'LotSize', 'NumberOfBedrooms', 'NumberOfWC', 'EnergyEfficiencyLevel', 'ConstructionYear', 'ElectricCarsCharging', 'TotalRooms', 'LivingArea', 'Parking']
+cols_to_drop = ['ConservationStatus', 'BuiltArea', 'GrossArea', 'Town', 'Floor', 'PublishDate', 'LotSize', 'NumberOfWC', 'EnergyEfficiencyLevel', 'ConstructionYear', 'ElectricCarsCharging', 'TotalRooms', 'LivingArea', 'Parking']
 new_data = data.drop(cols_to_drop, axis=1)
 missing_percentage_updated = (new_data.isnull().sum() / len(data)) * 100
 data_to_put_zero = ['Garage', 'HasParking']
@@ -35,7 +36,7 @@ citys = ['District', 'City', 'Town']
 
 for col in citys:
     final_data[col]=final_data[col].astype(str)
-    encoder = LabelEncoder()
+    encoder = OneHotEncoder()
     final_data[col] = encoder.fit_transform(final_data[col])
 
 final_data = final_data[clean_area & clean_price & clean_bath]
@@ -57,9 +58,9 @@ print("O erro médio é:", mae)
 
 
 
-# print(final_data.info())
+#print(final_data.info())
 # print(final_data['District'].describe())
-# print(final_data['City'].describe())
+#print(final_data['City'].head())
 # print(final_data['Town'].describe())
 # print(final_data['Type'].unique())
 # print(final_data['EnergyCertificate'].unique())
