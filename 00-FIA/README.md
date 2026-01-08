@@ -1,0 +1,2 @@
+Cloud Computing TeSP (CETESP) - AI Fundamentals
+This directory contains the academic projects developed for the Artificial Intelligence Fundamentals course as part of the Cloud Computing TeSP (CETESP). The repository serves as a portfolio of my learning progress in Machine Learning and Deep Learning.
